@@ -23,11 +23,11 @@ jobs:
           fetch-depth: 1
 
       # Attesa dinamica: si adatta automaticamente a ora legale/solare
-      - name: Attendi orario italiano (21:30)
+      - name: Attendi orario italiano (21:45)
         run: |
           export TZ="Europe/Rome"
           NOW=$(date +%s)
-          TARGET=$(date -d "21:30" +%s)
+          TARGET=$(date -d "21:45" +%s)
           
           DIFF=$((TARGET - NOW))
           if [ $DIFF -gt 0 ]; then
