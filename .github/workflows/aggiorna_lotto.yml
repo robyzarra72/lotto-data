@@ -2,11 +2,9 @@ name: Aggiorna Storico Lotto
 
 on:
   schedule:
-    # Gira tutti i giorni (*) alle 19:45 UTC.
-    # In estate (CEST) sono le 21:45 italiane (parte subito).
-    # In inverno (CET) sono le 20:45 italiane (lo script aspetterà 1 ora).
-    - cron: '45 19 * * *'
-  workflow_dispatch:
+    # Gira tutti i giorni alle 19:30 UTC (21:30 italiane)
+    - cron: '30 19 * * *'
+  workflow_dispatch: # Permette l'avvio manuale
 
 jobs:
   aggiorna:
@@ -22,19 +20,22 @@ jobs:
         with:
           fetch-depth: 1
 
-      # Attesa dinamica: si adatta automaticamente a ora legale/solare
-      - name: Attendi orario italiano (21:45)
+      # Attesa dinamica (solo se attivato dal timer automatico)
+      - name: Attendi orario italiano (21:30)
         run: |
           export TZ="Europe/Rome"
-          NOW=$(date +%s)
-          TARGET=$(date -d "21:45" +%s)
-          
-          DIFF=$((TARGET - NOW))
-          if [ $DIFF -gt 0 ]; then
-            echo "Orario italiano attuale: $(date +'%H:%M'). Attendo $DIFF secondi per arrivare alle 21:30..."
-            sleep $DIFF
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Avvio manuale rilevato: procedo subito senza attendere!"
           else
-            echo "Sono già le $(date +'%H:%M'), procedo con il download."
+            NOW=$(date +%s)
+            TARGET=$(date -d "21:30" +%s)
+            DIFF=$((TARGET - NOW))
+            if [ $DIFF -gt 0 ]; then
+              echo "Orario italiano attuale: $(date +'%H:%M'). Attendo $DIFF secondi per arrivare alle 21:30..."
+              sleep $DIFF
+            else
+              echo "Sono già le $(date +'%H:%M'), procedo con il download."
+            fi
           fi
 
       - name: Scarica storico.zip
@@ -45,7 +46,7 @@ jobs:
           if curl -fsSL --max-time 120 \
                -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
                "https://www.brightstarlottery.it/STORICO_ESTRAZIONI_LOTTO/storico.zip" \
-               -o data/storico.zip; then
+               -o storico.zip; then
             echo "source=brightstarlottery" >> "$GITHUB_OUTPUT"
             echo "Scaricato da brightstarlottery.it"
           else
@@ -53,18 +54,18 @@ jobs:
             curl -fsSL --max-time 120 \
                -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
                "https://www.lotto-italia.it/content/dam/lottoitalia/archivi/storico.zip" \
-               -o data/storico.zip
+               -o storico.zip
             echo "source=lotto-italia" >> "$GITHUB_OUTPUT"
             echo "Scaricato da lotto-italia.it"
           fi
 
       - name: Verifica ZIP
         run: |
-          if ! unzip -t data/storico.zip > /dev/null 2>&1; then
+          if ! unzip -t storico.zip > /dev/null 2>&1; then
             echo "ERRORE: il file scaricato non è un ZIP valido"
             exit 1
           fi
-          SIZE=$(stat -c%s data/storico.zip)
+          SIZE=$(stat -c%s storico.zip)
           echo "ZIP valido — dimensione: $SIZE byte"
           if [ "$SIZE" -lt 1048576 ]; then
             echo "ATTENZIONE: file troppo piccolo ($SIZE byte) — potrebbe essere incompleto"
@@ -73,18 +74,18 @@ jobs:
 
       - name: Estrai ultima estrazione
         run: |
-          unzip -p data/storico.zip | tail -20 | head -5 || true
+          unzip -p storico.zip | tail -20 | head -5 || true
 
       - name: Scrivi timestamp
         run: |
-          echo "Ultimo aggiornamento: $(date -u '+%Y-%m-%d %H:%M UTC')" > data/ultimo_aggiornamento.txt
-          echo "Sorgente: ${{ steps.download.outputs.source }}" >> data/ultimo_aggiornamento.txt
+          echo "Ultimo aggiornamento: $(date -u '+%Y-%m-%d %H:%M UTC')" > ultimo_aggiornamento.txt
+          echo "Sorgente: ${{ steps.download.outputs.source }}" >> ultimo_aggiornamento.txt
 
       - name: Commit e push
         run: |
           git config user.name  "LottoBot"
           git config user.email "lottobot@noreply.github.com"
-          git add data/storico.zip data/ultimo_aggiornamento.txt
+          git add storico.zip ultimo_aggiornamento.txt
           if git diff --staged --quiet; then
             echo "Nessuna modifica al file — skip commit"
           else
@@ -92,3 +93,4 @@ jobs:
             git push
             echo "Commit e push completati"
           fi
+          
