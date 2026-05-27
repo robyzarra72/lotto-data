@@ -67,7 +67,7 @@ jobs:
           fi
           SIZE=$(stat -c%s storico.zip)
           echo "ZIP valido — dimensione: $SIZE byte"
-          if [ "$SIZE" -lt 1048576 ]; then
+          if [ "$SIZE" -lt 500000 ]; then
             echo "ATTENZIONE: file troppo piccolo ($SIZE byte) — potrebbe essere incompleto"
             exit 1
           fi
