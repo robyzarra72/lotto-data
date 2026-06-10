@@ -21,17 +21,17 @@ jobs:
           fetch-depth: 1
 
       # Attesa dinamica (solo se attivato dal timer automatico)
-      - name: Attendi orario italiano (21:30)
+      - name: Attendi orario italiano (22:30)
         run: |
           export TZ="Europe/Rome"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "Avvio manuale rilevato: procedo subito senza attendere!"
           else
             NOW=$(date +%s)
-            TARGET=$(date -d "21:30" +%s)
+            TARGET=$(date -d "22:30" +%s)
             DIFF=$((TARGET - NOW))
             if [ $DIFF -gt 0 ]; then
-              echo "Orario italiano attuale: $(date +'%H:%M'). Attendo $DIFF secondi per arrivare alle 21:30..."
+              echo "Orario italiano attuale: $(date +'%H:%M'). Attendo $DIFF secondi per arrivare alle 22:30..."
               sleep $DIFF
             else
               echo "Sono già le $(date +'%H:%M'), procedo con il download."
