@@ -2,8 +2,8 @@ name: Aggiorna Storico Lotto
 
 on:
   schedule:
-    # Gira tutti i giorni alle 19:30 UTC (21:30 italiane)
-    - cron: '30 19 * * *'
+    # Gira tutti i giorni alle 19:00 UTC (21:00 italiane in estate)
+    - cron: '0 19 * * *'
   workflow_dispatch: # Permette l'avvio manuale
 
 jobs:
@@ -21,17 +21,17 @@ jobs:
           fetch-depth: 1
 
       # Attesa dinamica (solo se attivato dal timer automatico)
-      - name: Attendi orario italiano (22:30)
+      - name: Attendi orario italiano (21:00)
         run: |
           export TZ="Europe/Rome"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "Avvio manuale rilevato: procedo subito senza attendere!"
           else
             NOW=$(date +%s)
-            TARGET=$(date -d "22:30" +%s)
+            TARGET=$(date -d "21:00" +%s)
             DIFF=$((TARGET - NOW))
             if [ $DIFF -gt 0 ]; then
-              echo "Orario italiano attuale: $(date +'%H:%M'). Attendo $DIFF secondi per arrivare alle 22:30..."
+              echo "Orario italiano attuale: $(date +'%H:%M'). Attendo $DIFF secondi per arrivare alle 21:00..."
               sleep $DIFF
             else
               echo "Sono già le $(date +'%H:%M'), procedo con il download."
@@ -93,4 +93,3 @@ jobs:
             git push
             echo "Commit e push completati"
           fi
-          
