@@ -1,10 +1,9 @@
 name: Aggiorna Storico Lotto
 
 on:
-  schedule:
-    # Gira tutti i giorni alle 19:00 UTC (21:00 italiane in estate)
-    - cron: '0 19 * * *'
-  workflow_dispatch: # Permette l'avvio manuale
+  repository_dispatch:
+    types: [pa-trigger-update]
+  workflow_dispatch:       # tieni anche questo per poterlo lanciare a mano da UI
 
 jobs:
   aggiorna:
