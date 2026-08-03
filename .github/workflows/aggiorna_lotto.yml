@@ -2,7 +2,7 @@ name: Aggiorna Storico Lotto
 
 on:
   schedule:
-    - cron: '45 19 * * 2,4,5,6'   # 21:45 CEST (mar/gio/ven/sab) — orario invernale: 20:45 CET
+    - cron: '45 19 * * *'   # 21:45 CEST (mar/gio/ven/sab) — orario invernale: 20:45 CET
   workflow_dispatch: {}            # avvio manuale da UI GitHub
 
 jobs:
